@@ -1,6 +1,7 @@
 package com.devmobile.servi_alpha;
 
 import android.app.ProgressDialog;
+import android.content.Context;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -11,6 +12,9 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
+
+import java.io.File;
+import java.io.FileOutputStream;
 
 import butterknife.ButterKnife;
 import butterknife.InjectView;
@@ -27,6 +31,14 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        String filename="token.txt";
+        File file = new File(getFilesDir(), filename);
+        if (file.exists()){
+
+            Intent intent = new Intent(getApplicationContext(), MainActivity.class);
+            startActivity(intent);
+
+        }
         setContentView(R.layout.activity_login);
         ButterKnife.inject(this);
 
@@ -103,6 +115,18 @@ public class LoginActivity extends AppCompatActivity {
 
     public void onLoginSuccess() {
         _loginButton.setEnabled(true);
+        String filename="token.txt";
+        File file = new File(getFilesDir(), filename);
+        String string = "Hello world!";
+        FileOutputStream outputStream;
+
+        try {
+            outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
+            outputStream.write(string.getBytes());
+            outputStream.close();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
         Intent intent = new Intent(getApplicationContext(), MainActivity.class);
         startActivity(intent);
     }
