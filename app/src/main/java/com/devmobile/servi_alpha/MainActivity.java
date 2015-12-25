@@ -79,11 +79,13 @@ public class MainActivity extends AppCompatActivity {
                     getSupportActionBar().setTitle("Offers");
                     tabLayout.getTabAt(0).setIcon(iconTab[0]);
                     tabLayout.getTabAt(1).setIcon(iconTab[3]);
+                    //TODO: Implement Offers Search domain selection logic
                 }
                 if (position == 1) {
                     getSupportActionBar().setTitle("Professionals");
                     tabLayout.getTabAt(1).setIcon(iconTab[1]);
                     tabLayout.getTabAt(0).setIcon(iconTab[2]);
+                    //TODO: Implement Professional Search domain selection logic
                 }
             }
 
@@ -133,7 +135,7 @@ public class MainActivity extends AppCompatActivity {
                 });
 
 // 2. Chain together various setter methods to set the dialog characteristics
-                builder.setMessage(R.string.dialog_message)
+                        builder.setMessage(R.string.dialog_message)
                         .setTitle(R.string.dialog_title);
 
 // 3. Get the AlertDialog from create()
@@ -142,6 +144,8 @@ public class MainActivity extends AppCompatActivity {
                 return true;
             case R.id.action_profile:
                 //traitement profil
+                Intent intent = new Intent(getApplicationContext(), ProfileActivity.class);
+                startActivity(intent);
                 return true;
             case R.id.action_about:
                // traitement a propos
