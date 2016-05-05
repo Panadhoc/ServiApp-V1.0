@@ -1,25 +1,37 @@
 package com.devmobile.servi_alpha;
 
 import android.app.Activity;
+import android.content.Context;
 import android.net.Uri;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
 
 import java.util.ArrayList;
 import java.util.List;
 
 
-public class FragmentOne extends Fragment {
+public class FragmentOne extends MyFragment {
+
 
 
     private RecyclerView rv;
-    private List<Person> offers;
+    private List<Post> offers;
+    private Bundle args;
+    OnCardSelectedListener mcallback;
     public FragmentOne() {
         // Required empty public constructor
     }
@@ -35,38 +47,48 @@ public class FragmentOne extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View myview = inflater.inflate(R.layout.fragment_blank, container, false);
+        initializeData();
         rv = (RecyclerView) myview.findViewById(R.id.rv);
         LinearLayoutManager llm = new LinearLayoutManager(getContext());
         rv.setLayoutManager(llm);
-        initializeData();
-        RVAdapter adapter = new RVAdapter(offers);
+        RVPAdapter adapter = new RVPAdapter(offers);
         rv.setAdapter(adapter);
+        rv.addOnItemTouchListener(
+                new RecyclerItemClickListener(getContext(), new RecyclerItemClickListener.OnItemClickListener() {
+                    @Override
+                    public void onItemClick(View view, int position) {
+                        mcallback.onPersonSelected(position,0);
+                    }
+                })
+        );
         return myview;
 
     }
 
 
-    // This method creates an ArrayList that has three Person objects
-// Checkout the project associated with this tutorial on Github if
-// you want to use the same images.
     private void initializeData(){
         offers = new ArrayList<>();
-        offers.add(new Person("Offer 1", "Tunis", R.drawable.saw));
-        offers.add(new Person("Offer 2", "Ariana", R.drawable.hammer));
-        offers.add(new Person("Offer 3", "Ben Arous", R.drawable.tournevis));
+        args=getArguments();
+        try {
+            for (int i = 0; i < args.getInt("len"); i++) {
+
+                offers.add(new Post( args.getString("title" + i),args.getString("postID" + i),
+                        args.getString("desc" + i), args.getString("owner" + i), args.getInt("photoID" + i)));
+            }
+        }
+        catch (Exception e){
+            offers.add(new Post("Fake Post","fakeid","Fake Description","1",R.drawable.tournevis));
+        }
     }
+    @Override
+    public void onAttach(Context context) {
+        super.onAttach(context);
 
 
-    /**
-     * This interface must be implemented by activities that contain this
-     * fragment to allow an interaction in this fragment to be communicated
-     * to the activity and potentially other fragments contained in that
-     * activity.
-     * <p/>
-     * See the Android Training lesson <a href=
-     * "http://developer.android.com/training/basics/fragments/communicating.html"
-     * >Communicating with Other Fragments</a> for more information.
-     */
 
+        if (context instanceof Activity){
+            mcallback=(OnCardSelectedListener) context;
+        }
 
+    }
 }

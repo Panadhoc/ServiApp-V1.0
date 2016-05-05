@@ -7,14 +7,18 @@ import java.util.List;
  * Created by Souhail on 25/12/2015.
  */
 class Person {
-    String name;
-    String age;
-    int photoId;
+    String username;
+    int photoID;
+    String userId;
+    String email;
+    String service;
+    String phone;
+    String address;
 
-    Person(String name, String age, int photoId) {
-        this.name = name;
-        this.age = age;
-        this.photoId = photoId;
+    Person(String name, String userid, int photoId) {
+        this.username = name;
+        this.userId = userid;
+        this.photoID = photoId;
     }
 }
 

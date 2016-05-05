@@ -13,6 +13,12 @@ import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.RequestQueue;
+import com.android.volley.Response;
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.StringRequest;
+import com.android.volley.toolbox.Volley;
+
 import java.io.File;
 import java.io.FileOutputStream;
 
@@ -21,7 +27,13 @@ import butterknife.InjectView;
 
 public class LoginActivity extends AppCompatActivity {
     private static final String TAG = "LoginActivity";
+    public static String JSON_URL ;
     private static final int REQUEST_SIGNUP = 0;
+    private String name;
+    private String password;
+    private String resp;
+    private String[] token;
+
 
     @InjectView(R.id.input_email) EditText _emailText;
     @InjectView(R.id.input_password) EditText _passwordText;
@@ -31,14 +43,18 @@ public class LoginActivity extends AppCompatActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        String filename="token.txt";
-        File file = new File(getFilesDir(), filename);
-        if (file.exists()){
+        Globals.init_address();
+        JSON_URL =Globals.address+":8080/servi/app/user/login?username=";
+        try {
+            String filename = "token.txt";
+            File file = new File(getFilesDir(), filename);
 
+        if (file.exists()){
             Intent intent = new Intent(getApplicationContext(), MainActivity.class);
             startActivity(intent);
 
         }
+        }catch (Exception e){}
         setContentView(R.layout.activity_login);
         ButterKnife.inject(this);
 
@@ -46,7 +62,12 @@ public class LoginActivity extends AppCompatActivity {
 
             @Override
             public void onClick(View v) {
-                login();
+
+                if (validate())
+                {
+                    login();
+                }
+
             }
         });
 
@@ -64,7 +85,7 @@ public class LoginActivity extends AppCompatActivity {
     public void login() {
         Log.d(TAG, "Login");
 
-        if (!validate()) {
+        if (!validate() && (name == null|| name.equals(("")))) {
             onLoginFailed();
             return;
         }
@@ -77,21 +98,46 @@ public class LoginActivity extends AppCompatActivity {
         progressDialog.setMessage("Authenticating...");
         progressDialog.show();
 
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+        if (name == null) {
+            name = _emailText.getText().toString();
+            password = _passwordText.getText().toString();
+        }
+        JSON_URL+=name+"&pwd="+password;
+        Log.v("error",JSON_URL);
+        StringRequest stringRequest = new StringRequest(JSON_URL,
+                new Response.Listener<String>() {
+                    @Override
+                    public void onResponse(String response) {
+                        ParseJSON pj = new ParseJSON(response);
+                        resp=response;
+                        token=pj.parseID();
 
-        // TODO: Implement your own authentication logic here.
+                    }
+
+                }
+                ,
+                new Response.ErrorListener() {
+                    @Override
+                    public void onErrorResponse(VolleyError error) {
+                        Toast.makeText(LoginActivity.this, error.getMessage(), Toast.LENGTH_LONG).show();
+                    }
+                });
+        RequestQueue requestQueue = Volley.newRequestQueue(LoginActivity.this);
+        requestQueue.add(stringRequest);
 
         new android.os.Handler().postDelayed(
                 new Runnable() {
                     public void run() {
-                        // On complete call either onLoginSuccess or onLoginFailed
-                        onLoginSuccess();
+                        if (resp==null || resp.equals("{}") ){
+                            onLoginFailed();
+                        }
+                        else {
+                            onLoginSuccess();
+                        }
 
-                        // onLoginFailed();
                         progressDialog.dismiss();
                     }
-                }, 3000);
+                },4000);
     }
 
 
@@ -100,8 +146,9 @@ public class LoginActivity extends AppCompatActivity {
         if (requestCode == REQUEST_SIGNUP) {
             if (resultCode == RESULT_OK) {
 
-                // TODO: Implement successful signup logic here
-                // By default we just finish the Activity and log them in automatically
+                name=data.getStringExtra("name");
+                password=data.getStringExtra("password");
+                login();
 
             }
         }
@@ -117,12 +164,15 @@ public class LoginActivity extends AppCompatActivity {
         _loginButton.setEnabled(true);
         String filename="token.txt";
         File file = new File(getFilesDir(), filename);
-        String string = "Hello world!";
         FileOutputStream outputStream;
 
         try {
             outputStream = openFileOutput(filename, Context.MODE_PRIVATE);
-            outputStream.write(string.getBytes());
+            outputStream.write(token[0].getBytes());
+            outputStream.write("\n".getBytes());
+            outputStream.write(token[1].getBytes());
+            outputStream.write("\n".getBytes());
+            outputStream.write(password.getBytes());
             outputStream.close();
         } catch (Exception e) {
             e.printStackTrace();
@@ -140,18 +190,18 @@ public class LoginActivity extends AppCompatActivity {
     public boolean validate() {
         boolean valid = true;
 
-        String email = _emailText.getText().toString();
-        String password = _passwordText.getText().toString();
+        name= _emailText.getText().toString();
+        password = _passwordText.getText().toString();
 
-        if (email.isEmpty() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            _emailText.setError("enter a valid email address");
+        if (name.isEmpty() || name.length() < 3) {
+            _emailText.setError("at least 3 characters");
             valid = false;
         } else {
             _emailText.setError(null);
         }
 
-        if (password.isEmpty() || password.length() < 4 || password.length() > 10) {
-            _passwordText.setError("between 4 and 10 alphanumeric characters");
+        if (password.isEmpty() || password.length() < 8 || password.length() > 16) {
+            _passwordText.setError("between 8 and 16 alphanumeric characters");
             valid = false;
         } else {
             _passwordText.setError(null);
